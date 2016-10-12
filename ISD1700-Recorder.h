@@ -18,6 +18,7 @@
 
 #include <arduino.h>
 #include <avr/pgmspace.h>
+#include "uart.h"
 
 /////////////////////////
 // CONFIGURATION VARIABLES
@@ -28,9 +29,6 @@ const unsigned int AUDIO_THRESHOLD = TODO;  // Volume threshold for beginning of
 // ISD1700
 const uint16_t ISD_MAX_ADDR = 0x14F;  // Last row of ISD1740
 
-// UART
-const unsigned int UART_BAUD = 9600;
-
 // SPI
 const unsigned long SPI_RATE = 1000000;
 const byte SPI_ENDIAN = LSBFIRST;
@@ -40,14 +38,17 @@ const byte SPI_MODE = SPI_MODE1;
 // UI Strings
 const PROGMEM char[] START_ADDR_STR = "Start address : 0x";
 const PROGMEM char[] DURATION_STR = "Duration of audio (in milliseconds): ";
+const PROGMEM char[] WAITING_STR = "Waiting for audio signal... \r\n";
 const PROGMEM char[] RECORDING_STR = "Recording...\r\n";
 const PROGMEM char[] SR_ESTIMATE_STR = "The sample rate is approximately ";
 const PROGMEM char[] VOL_STR = "Playback volume (0 - 7, other to quit): ";
-const PROGMEM char[] PLAYBACK_STR = "Playing back audio at volume ";
+const PROGMEM char[] PLAYBACK_STR = "Playing back audio...\r\n";
 
 // Error Strings
 const PROGMEM char[] ERR_INV_ADDR_STR = "Invalid memory pointer!\r\n";
-const PROGMEM char[] ERR_EOM_STR = "End of memory reached.\r\n";
+const PROGMEM char[] ERR_INV_DUR_STR = "Invalid duration!\r\n";
+const PROGMEM char[] ERR_EOM_1_STR = "End of memory reached. Audio was still recorded for ";
+const PROGMEM char[] ERR_EOM_2_STR = " milliseconds.";
 
 
 /////////////////////////
@@ -61,7 +62,7 @@ const byte SPI_SS_PIN = 10;
 // SPI_MISO_PIN = 12
 // SPI_SCLK_PIN = 13
 
-const byte AUDIO_MONITOR = A0;
+const byte AUDIO_IN_PIN = A0;
 
 // SERIAL_RX_PIN = 0
 // SERIAL_TX_PIN = 1
@@ -83,10 +84,6 @@ typedef enum record_state {
 /////////////////////////
 // ISD1700 CONSTANTS
 /////////////////////////
-
-// Memory information
-const uint16_t ISD_MIN_ADDR = 0x010;
-const uint8_t ISD_HEX_ADDR_WIDTH = 3;
 
 // Commands list
 // TODO

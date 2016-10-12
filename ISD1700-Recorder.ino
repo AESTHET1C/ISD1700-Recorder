@@ -1,7 +1,4 @@
 program_state Program_State = HALTED;
-uint16_t Start_Ptr;
-unsigned long Record_Start;
-int Record_Duration;
 
 void setup() {
 	// TODO
@@ -10,7 +7,21 @@ void setup() {
 }
 
 void loop() {
+	uint16_t Start_Ptr = getStartAddress();
+	unsigned long Record_Duration = getRecordDuration();
+
+	Serial.write(WAITING_STR);
+	while(analogRead(AUDIO_IN_PIN) < AUDIO_THRESHOLD) {
+		// Do nothing
+	}
+
+	Serial.flush();
+	unsigned long Record_Start = millis();
+	Serial.write(RECORDING_STR);
+
+
 	// TODO
+	// Redo structure such that there's no massive state machine
 	switch(Program_State){
 		case default:
 			Program_State = HALTED;
@@ -29,9 +40,7 @@ void loop() {
 			}
 			Program_State = REC_WAIT;
 		case REC_WAIT:
-			if(analogRead(AUDIO_MONITOR) >= AUDIO_THRESHOLD) {
-				Program_State = RECORDING;
-			}
+
 			break;
 		case RECORDING:
 			// TODO
