@@ -1,12 +1,14 @@
-program_state Program_State = HALTED;
-
 void setup() {
 	// TODO
 	// Init pins and such
 	// Basically all the setup
+	powerUpISD();
+	initISD();
+	powerDownISD();
 }
 
 void loop() {
+	// Prompt for recording information
 	uint16_t Start_Ptr = getStartAddress();
 	unsigned long Record_Duration = getRecordDuration();
 
@@ -14,81 +16,53 @@ void loop() {
 	while(analogRead(AUDIO_IN_PIN) < AUDIO_THRESHOLD) {
 		// Do nothing
 	}
-
 	Serial.flush();
+	powerUpISD();
+	clearIntISD();
+	beginISDRecording(Start_Ptr);
 	unsigned long Record_Start = millis();
 	Serial.write(RECORDING_STR);
 
+	bool Interruped = false;
+	unsigned long Curr_Duration = 0;
+	while((Curr_Duration < Record_Duration) && (!Interrupted)) {
+		Interrupted = ISDInterrupted();
+		Curr_Duration = millis() - Record_Start;
+	}
+	stopISD();
 
-	// TODO
-	// Redo structure such that there's no massive state machine
-	switch(Program_State){
-		case default:
-			Program_State = HALTED;
-		case HALTED:
-			// TODO
-			// Do nothing?
-			break;
-		case REC_READY:
-			// TODO
-			// Prompt for Start_Ptr
-			// Prompt for Duration
-			if(// TODO Invalid) {
-				// TODO
-				// Display ERR_INV_STR + ".\n"
-				break;
-			}
-			Program_State = REC_WAIT;
-		case REC_WAIT:
+	if(Interrupted) {
+		powerDownISD();
+		Serial.write(ERR_EOM_1_STR);
+		Serial.print(Curr_Duration);
+		Serial.write(ERR_EOM_2_STR);
+		Serial.write("\r\n");
+	}
+	else {
+		unsigned long Mem_Used = getRecPtrISD() - Start_Ptr;
+		powerDownISD();
+		Serial.write(SR_ESTIMATE_1_STR);
+		Serial.print(Mem_Used / Curr_Duration);
+		Serial.write(SR_ESTIMATE_2_STR);
 
-			break;
-		case RECORDING:
-			// TODO
-			// Start recording
-			Record_Start = millis();
-			// Display RECORDING_STR
-			while(Program_State == RECORDING) {
-				if(/* TODO Interrupt*/) {
-					// TODO
-					// Clear interrupt
-					// Display ERR_EOM_STR
-					Program_State = REC_READY;
-				}
-				if(millis() - Record_Start >= Record_Duration) {
-					// TODO
-					// Stop recording
-					// Get end address
-					// Calculate sample rate
-					// Display SR_ESTIMATE_STR + sample rate + ".\n"
-					Program_State = PB_READY;
-				}
-			}
-			break;
-		case PB_READY:
-			byte Volume;
-			// TODO
-			// Prompt with VOL_STR to Volume
-			// Convert Volume to usable value
-			if(Volume > 7) {
-				Program_State = REC_READY;
+		bool Playback_State = true;
+		while(Playback_State) {
+			byte Playback_Volume = getPlaybackVolume();
+			if(Playback_Volume > ISD_MIN_VOL) {
+				Playback_State = false;
 			}
 			else {
-				configISD(getISDConfig(Volume));
-				Program_State = PLAYBACK;
+				powerUpISD();
+				beginISDPlayback(Start_Ptr, Playback_Volume);
+				unsigned long Playback_Start = millis();
+				Serial.write(PLAYBACK_STR);
+				while((millis() - Playback_Start) < Curr_Duration) {
+					// Do nothing
+				}
+				stopISD();
+				powerDownISD();
 			}
-			break;
-		case PLAYBACK:
-			// TODO
-			// Display PLAYBACK_STR + volume + ".\n"
-			Program_State = REC_READY;
-			break;
+		}
+		Serial.write("\r\n");
 	}
-
-}
-
-uint16_t getISDConfig(byte volume) {
-	if(volume > 7) {
-		volume = 7;
-	}
-	return (ISD_AUDIO_CONFIG | (volume & B00000111));
 }

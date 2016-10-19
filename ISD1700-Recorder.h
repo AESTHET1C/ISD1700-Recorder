@@ -15,9 +15,11 @@
  *
  * Written by Alex Tavares <tavaresa13@gmail.com>
  */
-
+#ifndef main_h
+#define main_h
 #include <arduino.h>
 #include <avr/pgmspace.h>
+#include "isd.h"
 #include "uart.h"
 
 /////////////////////////
@@ -26,22 +28,15 @@
 
 const unsigned int AUDIO_THRESHOLD = TODO;  // Volume threshold for beginning of recording
 
-// ISD1700
-const uint16_t ISD_MAX_ADDR = 0x14F;  // Last row of ISD1740
-
-// SPI
-const unsigned long SPI_RATE = 1000000;
-const byte SPI_ENDIAN = LSBFIRST;
-const byte SPI_MODE = SPI_MODE1;
-
 
 // UI Strings
-const PROGMEM char[] START_ADDR_STR = "Start address : 0x";
+const PROGMEM char[] START_ADDR_STR = "Start address: 0x";
 const PROGMEM char[] DURATION_STR = "Duration of audio (in milliseconds): ";
 const PROGMEM char[] WAITING_STR = "Waiting for audio signal... \r\n";
 const PROGMEM char[] RECORDING_STR = "Recording...\r\n";
-const PROGMEM char[] SR_ESTIMATE_STR = "The sample rate is approximately ";
-const PROGMEM char[] VOL_STR = "Playback volume (0 - 7, other to quit): ";
+const PROGMEM char[] SR_ESTIMATE_1_STR = "The sample rate is approximately ";
+const PROGMEM char[] SR_ESTIMATE_2_STR = " Hz.\r\n";
+const PROGMEM char[] VOL_STR = "Playback volume (7 to 0, other to quit): ";
 const PROGMEM char[] PLAYBACK_STR = "Playing back audio...\r\n";
 
 // Error Strings
@@ -55,17 +50,8 @@ const PROGMEM char[] ERR_EOM_2_STR = " milliseconds.";
 // PIN DEFINITIONS
 /////////////////////////
 
-const byte ISD1700_INT_PIN = 9;
-
-const byte SPI_SS_PIN = 10;
-// SPI_MOSI_PIN = 11
-// SPI_MISO_PIN = 12
-// SPI_SCLK_PIN = 13
-
 const byte AUDIO_IN_PIN = A0;
 
-// SERIAL_RX_PIN = 0
-// SERIAL_TX_PIN = 1
 
 /////////////////////////
 // ENUMS
@@ -79,23 +65,6 @@ typedef enum record_state {
 	PB_READY,
 	PLAYBACK
 };
-
-
-/////////////////////////
-// ISD1700 CONSTANTS
-/////////////////////////
-
-// Commands list
-// TODO
-// Update this
-const byte ISD_STOP = 0x02;
-const byte ISD_WR_APC2 = 0x65;
-const byte ISD_SET_PLAY = 0x80;
-
-// Configuration data
-// TODO
-// Update this
-const uint16_t ISD_AUDIO_CONFIG = B0000010010100000;
 
 
 /////////////////////////
@@ -123,14 +92,6 @@ void initSerial();  // TODO
  * Must be called before first serial usage
  */
 
-void configISD(uint16_t configuration);  // TODO
-/*
- * Configures the ISD1700 device
- * Can be used to change volume
- *
- * INPUT:  configuration bytes to use
- */
-
 void startRecording(uint16_t start_ptr);  // TODO
 /*
  * Records audio to the ISD1700 chip until end of memory
@@ -146,12 +107,4 @@ void stopRecording();  // TODO
  *
  */
 
-uint16_t getISDConfig(byte volume);
-/*
- * Gets the configuration bytes for the ISD1700 chip, given a volume
- *
- * If the input volume is greater than 7, a volume of 7 is used.
- *
- * INPUT:  Volume, from 7 (quietest) to 0 (loudest)
- * OUTPUT: Two-byte configuration value
- */
+#endif

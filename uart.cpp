@@ -1,3 +1,5 @@
+#include "uart.h"
+
 // TODO
 // configureUART();
 
@@ -52,6 +54,41 @@ unsigned long getRecordDuration() {
 		}
 	}
 	return Rec_Duration;
+}
+
+byte getPlaybackVolume() {
+	bool Read_Complete = false;
+	bool Input_Digit = false;
+	byte Volume = 0;
+
+	flushSerialReadBuffer();
+	Serial.write(VOL_STR);
+	Serial.flush();
+	while(!Read_Complete) {
+		if(Serial.available()){
+			char Read_Digit = Serial.read();
+
+			if(Input_Digit) {
+				if(Read_Digit == '\b') {
+					Serial.write('\b');
+					Volume = 0;
+					Input_Digit = false;
+				}
+			}
+			else {
+				if(Read_Digit >= '0' && Read_Digit <= '9') {
+					Serial.write(Read_Digit);
+					Volume = (Read_Digit - '0');
+					Input_Digit = true;
+				}
+			}
+			if(Read_Digit == '\r' || Read_Digit == '\n') {
+				Serial.write("\r\n");
+				Read_Complete = true;
+			}
+		}
+	}
+	return Volume;
 }
 
 void flushSerialReadBuffer() {
