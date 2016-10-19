@@ -14,6 +14,7 @@
 #ifndef uart_h
 #define uart_h
 #include <arduino.h>
+#include <avr/pgmspace.h>
 #include "ISD1700-Recorder.h"
 #include "isd.h"
 
@@ -76,6 +77,13 @@ byte getPlaybackVolume();
  * Only single-digit numerical inputs are acknowledged.
  *
  * OUTPUT: Desired playback volume
+ */
+
+void printFlashString(const char string[]);
+/*
+ * Prints a string from flash memory
+ *
+ * INPUT:  Pointer to string in flash memory
  */
 
 

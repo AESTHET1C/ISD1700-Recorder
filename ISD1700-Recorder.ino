@@ -9,7 +9,7 @@ void loop() {
 	uint16_t Start_Ptr = getStartAddress();
 	unsigned long Record_Duration = getRecordDuration();
 
-	Serial.write(WAITING_STR);
+	printFlashString(WAITING_STR);
 	while(analogRead(AUDIO_IN_PIN) < AUDIO_THRESHOLD) {
 		// Do nothing
 	}
@@ -18,7 +18,7 @@ void loop() {
 	clearIntISD();
 	beginISDRecording(Start_Ptr);
 	unsigned long Record_Start = millis();
-	Serial.write(RECORDING_STR);
+	printFlashString(RECORDING_STR);
 
 	bool Interrupted = false;
 	unsigned long Curr_Duration = 0;
@@ -30,17 +30,17 @@ void loop() {
 
 	if(Interrupted) {
 		powerDownISD();
-		Serial.write(ERR_EOM_1_STR);
+		printFlashString(ERR_EOM_1_STR);
 		Serial.print(Curr_Duration);
-		Serial.write(ERR_EOM_2_STR);
+		printFlashString(ERR_EOM_2_STR);
 		Serial.write("\r\n");
 	}
 	else {
 		unsigned long Mem_Used = getRecPtrISD() - Start_Ptr;
 		powerDownISD();
-		Serial.write(SR_ESTIMATE_1_STR);
+		printFlashString(SR_ESTIMATE_1_STR);
 		Serial.print(Mem_Used / Curr_Duration);
-		Serial.write(SR_ESTIMATE_2_STR);
+		printFlashString(SR_ESTIMATE_2_STR);
 
 		bool Playback_State = true;
 		while(Playback_State) {
@@ -52,7 +52,7 @@ void loop() {
 				powerUpISD();
 				beginISDPlayback(Start_Ptr, Playback_Volume);
 				unsigned long Playback_Start = millis();
-				Serial.write(PLAYBACK_STR);
+				printFlashString(PLAYBACK_STR);
 				while((millis() - Playback_Start) < Curr_Duration) {
 					// Do nothing
 				}

@@ -15,7 +15,7 @@ uint16_t getStartAddress() {
 			Valid_Addr = true;
 		}
 		else {
-			Serial.write(ERR_INV_ADDR_STR);
+			printFlashString(ERR_INV_ADDR_STR);
 			Serial.flush();
 		}
 	}
@@ -28,15 +28,15 @@ unsigned long getRecordDuration() {
 	unsigned long Rec_Duration = 0;
 
 	flushSerialReadBuffer();
-	Serial.write(DURATION_STR);
+	printFlashString(DURATION_STR);
 	Serial.flush();
 	while(!Read_Complete){
 		if(Serial.available()){
 			char Read_Digit = Serial.read();
 
 			if(Input_Digits > 0) {
-				if(Read_Digit == '\b') {
-					Serial.write('\b');
+				if((Read_Digit == '\b') || (Read_Digit == 127)) {
+					Serial.write(127);
 					Rec_Duration = (Rec_Duration / 10);
 					Input_Digits--;
 				}
@@ -64,15 +64,15 @@ byte getPlaybackVolume() {
 	byte Volume = 0;
 
 	flushSerialReadBuffer();
-	Serial.write(VOL_STR);
+	printFlashString(VOL_STR);
 	Serial.flush();
 	while(!Read_Complete) {
 		if(Serial.available()){
 			char Read_Digit = Serial.read();
 
 			if(Input_Digit) {
-				if(Read_Digit == '\b') {
-					Serial.write('\b');
+				if((Read_Digit == '\b') || (Read_Digit == 127)) {
+					Serial.write(127);
 					Volume = 0;
 					Input_Digit = false;
 				}
@@ -93,6 +93,13 @@ byte getPlaybackVolume() {
 	return Volume;
 }
 
+void printFlashString(const char string[]) {
+	for(unsigned int i = 0; i < strlen_P(string); i++) {
+		Serial.write(pgm_read_byte_near(string + i));
+	}
+	return;
+}
+
 void flushSerialReadBuffer() {
 	while(Serial.available() > 0) {
 		Serial.read();
@@ -106,7 +113,7 @@ uint16_t promptStartAddress() {
 	uint16_t Start_Addr = 0;
 
 	flushSerialReadBuffer();
-	Serial.write(START_ADDR_STR);
+	printFlashString(START_ADDR_STR);
 	Serial.flush();
 	while(!Read_Complete){
 		if(Serial.available()){
@@ -116,8 +123,8 @@ uint16_t promptStartAddress() {
 			}
 
 			if(Input_Digits > 0) {
-				if(Read_Digit == '\b') {
-					Serial.write('\b');
+				if((Read_Digit == '\b') || (Read_Digit == 127)) {
+					Serial.write(127);
 					Start_Addr = (Start_Addr >> 4);
 					Input_Digits--;
 				}
