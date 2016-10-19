@@ -1,11 +1,13 @@
+#include "ISD1700-Recorder.h"
+
 void setup() {
 	// TODO
 	// Init pins and such
 	initISD();
+	initUART();
 }
 
 void loop() {
-	// Prompt for recording information
 	uint16_t Start_Ptr = getStartAddress();
 	unsigned long Record_Duration = getRecordDuration();
 

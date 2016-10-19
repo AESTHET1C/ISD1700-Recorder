@@ -28,7 +28,6 @@
 
 const unsigned int AUDIO_THRESHOLD = TODO;  // Volume threshold for beginning of recording
 
-
 // UI Strings
 const PROGMEM char[] START_ADDR_STR = "Start address: 0x";
 const PROGMEM char[] DURATION_STR = "Duration of audio (in milliseconds): ";
@@ -106,5 +105,6 @@ void stopRecording();  // TODO
  * Stops recording audio on the ISD1700 chip
  *
  */
+
 
 #endif

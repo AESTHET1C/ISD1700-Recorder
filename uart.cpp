@@ -1,7 +1,9 @@
 #include "uart.h"
 
-// TODO
-// configureUART();
+void initUART() {
+	Serial.begin(UART_BAUD);
+	return;
+}
 
 uint16_t getStartAddress() {
 	bool Valid_Addr = false;

@@ -72,7 +72,7 @@ void initISD();
 /*
  * Initializes SPI communications and the ISD1700 device
  *
- * This involves setting pin states, and resetting the ISD1700 device's configuration.
+ * This involves setting pin states and resetting the ISD1700 device's configuration.
  *
  * Affects the ISD1700 device's APC register
  */
