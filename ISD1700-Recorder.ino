@@ -33,7 +33,6 @@ void loop() {
 		printFlashString(ERR_EOM_1_STR);
 		Serial.print(Curr_Duration);
 		printFlashString(ERR_EOM_2_STR);
-		Serial.write("\r\n");
 	}
 	else {
 		unsigned long Mem_Used = getRecPtrISD() - Start_Ptr;
@@ -60,6 +59,6 @@ void loop() {
 				powerDownISD();
 			}
 		}
-		Serial.write("\r\n");
 	}
+	Serial.write("\r\n");
 }

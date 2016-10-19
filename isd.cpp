@@ -73,7 +73,7 @@ uint16_t getRecPtrISD() {
 }
 
 bool ISDInterrupted() {
-	return digitalRead(ISD_INT_PIN);
+	return(!digitalRead(ISD_INT_PIN));
 }
 
 void configISD(bool feedthrough, byte volume) {

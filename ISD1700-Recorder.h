@@ -37,7 +37,7 @@ const PROGMEM char PLAYBACK_STR[] = "Playing back audio...\r\n";
 const PROGMEM char ERR_INV_ADDR_STR[] = "Invalid memory pointer!\r\n";
 const PROGMEM char ERR_INV_DUR_STR[] = "Invalid duration!\r\n";
 const PROGMEM char ERR_EOM_1_STR[] = "End of memory reached. Audio was still recorded for ";
-const PROGMEM char ERR_EOM_2_STR[] = " milliseconds.";
+const PROGMEM char ERR_EOM_2_STR[] = " milliseconds.\r\n";
 
 
 /////////////////////////
