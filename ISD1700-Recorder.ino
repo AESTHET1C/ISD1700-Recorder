@@ -1,10 +1,7 @@
 void setup() {
 	// TODO
 	// Init pins and such
-	// Basically all the setup
-	powerUpISD();
 	initISD();
-	powerDownISD();
 }
 
 void loop() {

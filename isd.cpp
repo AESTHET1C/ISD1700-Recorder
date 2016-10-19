@@ -1,11 +1,13 @@
 #include "isd.h"
 
-void initISD() {  // TODO
+void initISD() {
 	pinMode(ISD_INT_PIN, INPUT);
 	digitalWrite(ISD_SS_PIN, HIGH);
 	pinMode(ISD_SS_PIN, OUTPUT);
 	SPI.begin();
+	powerUpISD();
 	configISD(true, ISD_DEFAULT_VOL);
+	powerDownISD();
 	return;
 }
 
@@ -26,19 +28,15 @@ void stopISD() {
 	return;
 }
 
-bool ISDInterrupted() {
-	return digitalRead(ISD_INT_PIN);
-}
-
-void clearIntISD() {
-	sendISDCommand(ISD_CLR_INT);
-	return;
-}
-
-uint16_t getRecPtrISD() {  // TODO
-}
-
-void beginISDRecording(record_ptr) {  // TODO
+void beginISDRecording(record_ptr) {
+	SPI.beginTransaction(ISD_SPI_SETTINGS);
+	digitalWrite(SPI_SS_PIN, LOW);
+	SPI.transfer16((uint16_t) ISD_SET_REC);
+	SPI.transfer16(record_ptr);
+	SPI.transfer16(ISD_MAX_ADDR);
+	SPI.transfer(0x00);
+	digitalWrite(SPI_SS_PIN, HIGH);
+	SPI.endTransaction();
 	return;
 }
 
@@ -59,6 +57,23 @@ void beginISDPlayback(play_ptr, volume) {
 	SPI.endTransaction();
 
 	return;
+}
+
+uint16_t getRecPtrISD() {
+	uint16_t Record_Ptr;
+
+	SPI.beginTransaction(ISD_SPI_SETTINGS);
+	digitalWrite(SPI_SS_PIN, LOW);
+	SPI.transfer16((uint16_t) ISD_RD_REC_PTR);
+	Record_Ptr = SPI.transfer16(0x0000);
+	digitalWrite(SPI_SS_PIN, HIGH);
+	SPI.endTransaction();
+
+	return Record_Ptr;
+}
+
+bool ISDInterrupted() {
+	return digitalRead(ISD_INT_PIN);
 }
 
 void configISD(feedthrough, volume) {
@@ -89,5 +104,10 @@ void sendISDCommand(command) {
 	SPI.transfer16((uint16_t) command);
 	digitalWrite(SPI_SS_PIN, HIGH);
 	SPI.endTransaction();
+	return;
+}
+
+void clearIntISD() {
+	sendISDCommand(ISD_CLR_INT);
 	return;
 }

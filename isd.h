@@ -54,8 +54,6 @@ const byte ISD_VOL_MASK = B111;
 const byte ISD_MIN_VOL = 7;
 
 // ISD Commands
-// TODO
-// Verify+update this
 const byte ISD_PU = 0x01;
 const byte ISD_STOP = 0x02;
 const byte ISD_CLR_INT = 0x04;
@@ -73,13 +71,18 @@ const byte ISD_SET_REC = 0x81;
 void initISD();
 /*
  * Initializes SPI communications and the ISD1700 device
+ *
+ * This involves setting pin states, and resetting the ISD1700 device's configuration.
+ *
+ * Affects the ISD1700 device's APC register
  */
 
 void powerUpISD();
 /*
  * Powers up the ISD1700 device into SPI mode
  *
- * This function should be called before any other command is sent.
+ * This function should be called before any other commands are sent to the ISD1700 device,
+ * excluding initISD().
  */
 
 void powerDownISD();
@@ -91,21 +94,48 @@ void powerDownISD();
 
 void stopISD();
 /*
- * Stops any active operation of the ISD1700 device
+ * Stops any active operation of the ISD1700 device and resets it
  *
- * This function generates also clears any pre-existing interrupt, and resets device configuration.
+ * This function clears the ISD1700 device's interrupt flag, and resets its configuration.
+ * This includes enabling audio feedthrough and setting volume.
+ *
+ * Affects the ISD1700 device's APC register and interrupt flag
  */
 
-bool ISDInterrupted();
+void beginISDRecording(uint16_t record_ptr);
 /*
- * Gets the state of the ISD1700 interrupt
+ * Begins recording indefinitely to the ISD1700 at a given address
  *
- * OUTPUT: Interrupt state
+ * Recording should be stopped by using stopISD().
+ * If end of memory is reached, recording stops and the ISD1700's interrupt register is set.
+ *
+ * It is assumed the APC register is already configured.
+ *
+ * An invalid recording address will cause undefined behavior.
+ *
+ * Affects the ISD1700 device's REC_PTR register
+ * INPUT:  Recording start address
  */
 
-void clearIntISD();
+void beginISDPlayback(uint16_t play_ptr, byte volume);
 /*
- * Clears the interrupt register of the ISD1700 device
+ * Begins playback from the ISD1700 at a given address
+ *
+ * Playback should be stopped manually by using stopISD().
+ * If stopISD() is not sent during or at the end of playback,
+ * playback will continue to play to the end of the ISD1700 device's memory.
+ *
+ * An invalid playback address will default to playing the entirety of the ISD1700 device's memory.
+ *
+ * The volume is based upon the ISD1700 device. That is, a value of 7 is minimum, and 0 is maximum.
+ * Invalid volume levels will default to minimum volume.
+ *
+ * Audio feedthrough is disabled before playback.
+ * It should be enabled after playback stops.
+ *
+ * Affects the ISD1700 device's APC and PLAY_PTR registers
+ * INPUT:  Playback start address
+ *         Playback volume (7 to 0)
  */
 
 uint16_t getRecPtrISD();
@@ -117,34 +147,14 @@ uint16_t getRecPtrISD();
  * OUTPUT: Recording pointer of the ISD1700 device
  */
 
-void beginISDRecording(uint16_t record_ptr);
+bool ISDInterrupted();
 /*
- * Begins recording to the ISD1700 at a given address
+ * Gets the state of the ISD1700 interrupt
  *
- * Recording can be stopped by using stopISD().
- * If end of memory is reached, recording stops and the ISD1700's interrupt register is set.
+ * This is usually due to an unexpected end-of-memory event.
+ * The interrupt can be cleared using stopISD().
  *
- * INPUT:  Recording start address
- */
-
-void beginISDPlayback(uint16_t play_ptr, byte volume);
-/*
- * Begins playback from the ISD1700 at a given address
- *
- * Playback must be stopped manually by using stopISD().
- * If stopISD() is not sent during or at the end of playback,
- * playback will continue to play to the end of the ISD1700 device's memory.
- *
- * An invalid playback address will default to playing the entirety of the ISD1700 device's memory.
- *
- * The volume is based upon the ISD1700 device. That is, a value of 7 is miniumum, and 0 is maximum.
- * Invalid volume levels will default to minimum volume.
- *
- * Audio feedthrough is disabled before playback.
- * It should be enabled after playback stops.
- *
- * INPUT:  Playback start address
- *         Playback volume (7 to 0)
+ * OUTPUT: Interrupt state
  */
 
 
@@ -160,23 +170,30 @@ void configISD(bool feedthrough, byte volume);
  * It is required to record from the analogue input.
  * It should be enabled by default.
  *
- * The volume is based upon the ISD1700 device. That is, a value of 7 is miniumum, and 0 is maximum.
+ * The volume is based upon the ISD1700 device. That is, a value of 7 is minimum, and 0 is maximum.
  * Invalid volume levels will default to minimum volume.
  *
- * Affects the ISD1700 device's APC register and play pointer
+ * Affects the ISD1700 device's APC register
  * INPUT:  Feedthrough setting
  *         Playback volume (7 to 0)
  */
 
 void sendISDCommand(byte command);
 /*
- * Sends a basic ISD1700 command
+ * Sends a basic command to the ISD1700 device
  *
- * These commands only consist of a single byte, followed by a null byte.
+ * These commands consist only of a single command byte, followed by a null byte.
  *
- * All SPI transaction actions are handled.
+ * All SPI actions are handled automatically.
  *
  * INPUT:  Command to execute
+ */
+
+void clearIntISD();
+/*
+ * Clears the interrupt flag of the ISD1700 device
+ *
+ * Affects the ISD1700 device's interrupt flag
  */
 
 
