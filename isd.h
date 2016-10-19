@@ -71,6 +71,7 @@ const byte ISD_SET_REC = 0x81;
 void initISD();
 /*
  * Initializes SPI communications and the ISD1700 device
+ * Must be called before communicating with the ISD1700 device
  *
  * This involves setting pin states and resetting the ISD1700 device's configuration.
  *

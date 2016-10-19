@@ -2,16 +2,11 @@
  *
  * Records messages from an external analogue source to an ISD1700 series chip
  *
- * Prompts the user via UART for the starting address of the message and its duration.
- * Once these are specified, recording is automatically started upon detection of an audio signal.
- * After the specified amount of time elapses, the end address of the message is displayed,
- * along with an approximate sample frequency.
+ * First prompts user via serial terminal for recording address and duration.
+ * After recording completes, user is prompted for a playback volume.
+ * Playback can be repeated indefinitely at varying volumes.
  *
- * After recording, the user is prompted for a volume level for playback.
- * These levels are set by the ISD1700, where 0 is loudest and 7 is quietest.
- * Any value greater than 7 will exit playback.
- *
- * If the end of memory is reached, audio recording is halted and the user is notified.
+ * Estimated sample rate is also calculated.
  *
  * Written by Alex Tavares <tavaresa13@gmail.com>
  */
@@ -53,58 +48,30 @@ const byte AUDIO_IN_PIN = A0;
 
 
 /////////////////////////
-// ENUMS
-/////////////////////////
-
-typedef enum record_state {
-	HALTED,
-	REC_PROMPT,
-	REC_WAIT,
-	RECORDING,
-	PB_READY,
-	PLAYBACK
-};
-
-
-/////////////////////////
 // INTERNAL FUNCTIONS
 /////////////////////////
 
 void setup();
-// TODO
+/*
+ * Initializes all modules
+ * Runs automatically on program startup
+ */
 
 void loop();
-// TODO
-
-void initAudio();  // TODO
 /*
- * Initializes audio playback
- * Must be called at startup
+ * Handles the main code actions
+ * Automatically loops endlessly after setup()
  *
- * Initialization involves setting status variables and pin configurations.
- * The ISD1700 configuration register is also set.
- */
-
-void initSerial();  // TODO
-/*
- * Initializes serial communications for both UART and SPI
- * Must be called before first serial usage
- */
-
-void startRecording(uint16_t start_ptr);  // TODO
-/*
- * Records audio to the ISD1700 chip until end of memory
+ * Prompts the user via UART for the starting address of the message and its duration.
+ * Once these are specified, recording is automatically started upon detection of an audio signal.
+ * After the specified amount of time elapses, the end address of the message is displayed,
+ * along with an approximate sample frequency.
  *
- * A stop command should be used to end recording.
+ * After recording, the user is prompted for a volume level for playback.
+ * These levels are set by the ISD1700, where 0 is loudest and 7 is quietest.
+ * Any value greater than 7 will exit playback.
  *
- * INPUT:  First row in memory to record to
+ * If the end of memory is reached, audio recording is halted and the user is notified.
  */
-
-void stopRecording();  // TODO
-/*
- * Stops recording audio on the ISD1700 chip
- *
- */
-
 
 #endif

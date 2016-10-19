@@ -36,6 +36,7 @@ const byte ISD_HEX_ADDR_WIDTH = 3;  // Maximum hex digits of address
 void initUART();
 /*
  * Initializes UART communications
+ * Must be called before communicating with the UART terminal.
  *
  * This involves setting pin states and configuring the UART device.
  */

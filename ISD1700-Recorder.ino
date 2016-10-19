@@ -1,8 +1,6 @@
 #include "ISD1700-Recorder.h"
 
 void setup() {
-	// TODO
-	// Init pins and such
 	initISD();
 	initUART();
 }
