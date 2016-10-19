@@ -15,7 +15,7 @@
 #ifndef isd_h
 #define isd_h
 #include <arduino.h>
-#include <spi.h>
+#include <SPI.h>
 
 /////////////////////////
 // CONFIGURATION VARIABLES
@@ -27,9 +27,9 @@ const byte SPI_ENDIAN = LSBFIRST;
 const byte SPI_MODE = SPI_MODE1;
 
 // ISD1700
-const uint16_t ISD_MAX_ADDR = 0x14F;                        // ISD1740
-const uint16_t ISD_APC_DEFAULT_CONFIG = B0000010010100000;
-const byte ISD_DEFAULT_VOL = ISD_MIN_VOL;
+const uint16_t ISD_MAX_ADDR = 0x14F;                                   // ISD1740
+const uint16_t ISD_APC_DEFAULT_CONFIG = (B00000100 << 8) + B10100000;
+const byte ISD_DEFAULT_VOL = 7;
 
 
 /////////////////////////
@@ -37,7 +37,7 @@ const byte ISD_DEFAULT_VOL = ISD_MIN_VOL;
 /////////////////////////
 
 const byte ISD_INT_PIN = 9;
-const byte ISD_SS_PIN = PIN_SPI_SS;
+const byte ISD_SS_PIN = SS;
 
 
 /////////////////////////

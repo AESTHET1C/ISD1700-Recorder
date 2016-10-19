@@ -20,7 +20,7 @@ void loop() {
 	unsigned long Record_Start = millis();
 	Serial.write(RECORDING_STR);
 
-	bool Interruped = false;
+	bool Interrupted = false;
 	unsigned long Curr_Duration = 0;
 	while((Curr_Duration < Record_Duration) && (!Interrupted)) {
 		Interrupted = ISDInterrupted();

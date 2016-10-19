@@ -21,23 +21,23 @@
 // CONFIGURATION VARIABLES
 /////////////////////////
 
-const unsigned int AUDIO_THRESHOLD = TODO;  // Volume threshold for beginning of recording
+const unsigned int AUDIO_THRESHOLD = 500;  // Lower is less sensitive
 
 // UI Strings
-const PROGMEM char[] START_ADDR_STR = "Start address: 0x";
-const PROGMEM char[] DURATION_STR = "Duration of audio (in milliseconds): ";
-const PROGMEM char[] WAITING_STR = "Waiting for audio signal... \r\n";
-const PROGMEM char[] RECORDING_STR = "Recording...\r\n";
-const PROGMEM char[] SR_ESTIMATE_1_STR = "The sample rate is approximately ";
-const PROGMEM char[] SR_ESTIMATE_2_STR = " Hz.\r\n";
-const PROGMEM char[] VOL_STR = "Playback volume (7 to 0, other to quit): ";
-const PROGMEM char[] PLAYBACK_STR = "Playing back audio...\r\n";
+const PROGMEM char START_ADDR_STR[] = "Start address: 0x";
+const PROGMEM char DURATION_STR[] = "Duration of audio (in milliseconds): ";
+const PROGMEM char WAITING_STR[] = "Waiting for audio signal... \r\n";
+const PROGMEM char RECORDING_STR[] = "Recording...\r\n";
+const PROGMEM char SR_ESTIMATE_1_STR[] = "The sample rate is approximately ";
+const PROGMEM char SR_ESTIMATE_2_STR[] = " Hz.\r\n";
+const PROGMEM char VOL_STR[] = "Playback volume (7 to 0, other to quit): ";
+const PROGMEM char PLAYBACK_STR[] = "Playing back audio...\r\n";
 
 // Error Strings
-const PROGMEM char[] ERR_INV_ADDR_STR = "Invalid memory pointer!\r\n";
-const PROGMEM char[] ERR_INV_DUR_STR = "Invalid duration!\r\n";
-const PROGMEM char[] ERR_EOM_1_STR = "End of memory reached. Audio was still recorded for ";
-const PROGMEM char[] ERR_EOM_2_STR = " milliseconds.";
+const PROGMEM char ERR_INV_ADDR_STR[] = "Invalid memory pointer!\r\n";
+const PROGMEM char ERR_INV_DUR_STR[] = "Invalid duration!\r\n";
+const PROGMEM char ERR_EOM_1_STR[] = "End of memory reached. Audio was still recorded for ";
+const PROGMEM char ERR_EOM_2_STR[] = " milliseconds.";
 
 
 /////////////////////////

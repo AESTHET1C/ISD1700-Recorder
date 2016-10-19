@@ -37,7 +37,7 @@ unsigned long getRecordDuration() {
 			if(Input_Digits > 0) {
 				if(Read_Digit == '\b') {
 					Serial.write('\b');
-					Start_Addr = (Start_Addr / 10);
+					Rec_Duration = (Rec_Duration / 10);
 					Input_Digits--;
 				}
 				if(Read_Digit == '\r' || Read_Digit == '\n') {
@@ -48,7 +48,7 @@ unsigned long getRecordDuration() {
 
 			if(Input_Digits < ISD_DUR_MAX_DIGITS) {
 				if(Read_Digit >= '0' && Read_Digit <= '9') {
-					Start_Addr = (Start_Addr * 10) + (Read_Digit - '0');
+					Rec_Duration = (Rec_Duration * 10) + (Read_Digit - '0');
 					Serial.write(Read_Digit);
 					Input_Digits++;
 				}
