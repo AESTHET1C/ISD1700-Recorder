@@ -1,30 +1,49 @@
 #include "isd.h"
 
 void initISD() {
-	pinMode(ISD_INT_PIN, INPUT);
+	pinMode(ISD_INT_PIN, INPUT_PULLUP);
 	digitalWrite(ISD_SS_PIN, HIGH);
 	pinMode(ISD_SS_PIN, OUTPUT);
 	SPI.begin();
-	powerUpISD();
-	configISD(true, ISD_DEFAULT_VOL);
-	powerDownISD();
-	return;
-}
-
-void powerUpISD() {
 	sendISDCommand(ISD_PU);
+	delay(ISD_T_PUD);
+	sendISDCommand(ISD_RESET);
+	delay(ISD_T_SET);
+	sendISDCommand(ISD_PU);
+	delay(ISD_T_PUD);
+	configISDAPC(ISD_DISABLE_SPK);
 	return;
 }
 
-void powerDownISD() {
-	sendISDCommand(ISD_PD);
+void eraseISD() {
+	sendISDCommand(ISD_G_ERASE);
+	return;
+}
+
+void configISDAPC(byte volume) {
+	uint16_t ISD_APC_Config = ISD_APC_DEFAULT_CONFIG;
+
+	if(volume > ISD_MIN_VOL) {
+		ISD_APC_Config |= ISD_SPK_MASK;
+		volume = ISD_DEFAULT_VOL;
+	}
+	else {
+		ISD_APC_Config |= ISD_FT_MASK;
+	}
+	ISD_APC_Config |= ((uint16_t) volume);
+
+	SPI.beginTransaction(ISD_SPI_SETTINGS);
+	digitalWrite(ISD_SS_PIN, LOW);
+	SPI.transfer(ISD_WR_APC2);
+	SPI.transfer16(ISD_APC_Config);
+	digitalWrite(ISD_SS_PIN, HIGH);
+	SPI.endTransaction();
+
 	return;
 }
 
 void stopISD() {
 	sendISDCommand(ISD_STOP);
-	clearIntISD();
-	configISD(true, ISD_DEFAULT_VOL);
 	return;
 }
 
@@ -40,12 +59,10 @@ void beginISDRecording(uint16_t record_ptr) {
 	return;
 }
 
-void beginISDPlayback(uint16_t play_ptr, byte volume) {
+void beginISDPlayback(uint16_t play_ptr) {
 	if((play_ptr < ISD_MIN_ADDR) || (play_ptr > ISD_MAX_ADDR)) {
 		play_ptr = ISD_MIN_ADDR;
 	}
-
-	configISD(false, volume);
 
 	SPI.beginTransaction(ISD_SPI_SETTINGS);
 	digitalWrite(ISD_SS_PIN, LOW);
@@ -59,16 +76,16 @@ void beginISDPlayback(uint16_t play_ptr, byte volume) {
 	return;
 }
 
-uint16_t getRecPtrISD() {
+uint16_t getCurrPtrISD() {
 	uint16_t Record_Ptr;
 
 	SPI.beginTransaction(ISD_SPI_SETTINGS);
 	digitalWrite(ISD_SS_PIN, LOW);
-	SPI.transfer16((uint16_t) ISD_RD_REC_PTR);
-	Record_Ptr = SPI.transfer16(0x0000);
+	Record_Ptr = SPI.transfer16((uint16_t) ISD_CLR_INT);
 	digitalWrite(ISD_SS_PIN, HIGH);
 	SPI.endTransaction();
 
+	Record_Ptr = (Record_Ptr >> 5);
 	return Record_Ptr;
 }
 
@@ -76,25 +93,8 @@ bool ISDInterrupted() {
 	return(!digitalRead(ISD_INT_PIN));
 }
 
-void configISD(bool feedthrough, byte volume) {
-	uint16_t ISD_APC_Config = ISD_APC_DEFAULT_CONFIG;
-
-	if(!feedthrough) {
-		ISD_APC_Config |= ISD_FT_MASK;
-	}
-
-	if(volume != (volume & ISD_VOL_MASK)) {
-		volume = ISD_VOL_MASK;
-	}
-	ISD_APC_Config |= ((uint16_t) volume);
-
-	SPI.beginTransaction(ISD_SPI_SETTINGS);
-	digitalWrite(ISD_SS_PIN, LOW);
-	SPI.transfer(ISD_WR_APC2);
-	SPI.transfer16(ISD_APC_Config);
-	digitalWrite(ISD_SS_PIN, HIGH);
-	SPI.endTransaction();
-
+void clearIntISD() {
+	sendISDCommand(ISD_CLR_INT);
 	return;
 }
 
@@ -104,10 +104,5 @@ void sendISDCommand(byte command) {
 	SPI.transfer16((uint16_t) command);
 	digitalWrite(ISD_SS_PIN, HIGH);
 	SPI.endTransaction();
-	return;
-}
-
-void clearIntISD() {
-	sendISDCommand(ISD_CLR_INT);
 	return;
 }

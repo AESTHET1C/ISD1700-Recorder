@@ -6,7 +6,7 @@
  * After recording completes, user is prompted for a playback volume.
  * Playback can be repeated indefinitely at varying volumes.
  *
- * Estimated sample rate is also calculated.
+ * Estimated sample rate and end address are also displayed.
  *
  * Written by Alex Tavares <tavaresa13@gmail.com>
  */
@@ -21,13 +21,17 @@
 // CONFIGURATION VARIABLES
 /////////////////////////
 
-const unsigned int AUDIO_THRESHOLD = 500;  // Lower is less sensitive
+const unsigned int AUDIO_THRESHOLD = 517;  // Lower is more sensitive
 
 // UI Strings
+const PROGMEM char ERASE_PROMPT_STR[] = "Reset (erase) all memory for writing? (Y/N) ";
+const PROGMEM char ERASE_NOTE_STR[] = "Note that some memory locations may not be writable.\r\n";
+const PROGMEM char ERASING_STR[] = "Erasing all memory...\r\n";
 const PROGMEM char START_ADDR_STR[] = "Start address: 0x";
 const PROGMEM char DURATION_STR[] = "Duration of audio (in milliseconds): ";
 const PROGMEM char WAITING_STR[] = "Waiting for audio signal... \r\n";
 const PROGMEM char RECORDING_STR[] = "Recording...\r\n";
+const PROGMEM char RECORDING_END_STR[] = "Completed at address 0x";
 const PROGMEM char SR_ESTIMATE_1_STR[] = "The sample rate is approximately ";
 const PROGMEM char SR_ESTIMATE_2_STR[] = " Hz.\r\n";
 const PROGMEM char VOL_STR[] = "Playback volume (7 to 0, other to quit): ";
@@ -65,7 +69,7 @@ void loop();
  * Prompts the user via UART for the starting address of the message and its duration.
  * Once these are specified, recording is automatically started upon detection of an audio signal.
  * After the specified amount of time elapses, the end address of the message is displayed,
- * along with an approximate sample frequency.
+ * along with the an approximate sample frequency.
  *
  * After recording, the user is prompted for a volume level for playback.
  * These levels are set by the ISD1700, where 0 is loudest and 7 is quietest.

@@ -42,6 +42,13 @@ void initUART();
  * This involves setting pin states and configuring the UART device.
  */
 
+bool confirmISDFlashErase();
+/*
+ * Prompts the user on whether to erase all memory of the ISD1700 device
+ *
+ * OUTPUT: Is an erase desired?
+ */
+
 uint16_t getStartAddress();
 /*
  * Repeatedly prompts user for start address of recording and returns a valid address

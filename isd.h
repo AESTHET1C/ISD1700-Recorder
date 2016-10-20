@@ -2,12 +2,13 @@
  *
  * Handles all communication with the ISD1700 device
  *
- * The default state of the ISD1700 device is to pass input from the analogue input to the speaker.
- * This is done at minimum volume by default. Passthrough is disabled during playback.
- *
  * Playback and recording commands will begin at the given address, and continue until end of memory.
  * It is expected stopISD() is used to end playback and recording before this happens.
  * In addition, ISDInterrupted() can be used to determine if end of memory was reached.
+ *
+ * The speaker is never enabled at the same time as the analogue input.
+ * If a volume is selected for playback, the speaker is enabled and the analogue input disabled.
+ * Similarly, if the speaker is disabled, the analogue input becomes enabled for recording.
  *
  * Written by Alex Tavares <tavaresa13@gmail.com>
  */
@@ -24,11 +25,11 @@
 // SPI
 const unsigned long SPI_RATE = 1000000;
 const byte SPI_ENDIAN = LSBFIRST;
-const byte SPI_MODE = SPI_MODE1;
+const byte SPI_MODE = SPI_MODE3;
 
 // ISD1700
 const uint16_t ISD_MAX_ADDR = 0x14F;                                   // ISD1740
-const uint16_t ISD_APC_DEFAULT_CONFIG = (B00000100 << 8) + B10100000;
+const uint16_t ISD_APC_DEFAULT_CONFIG = (B0110 << 8) + B10100000;
 const byte ISD_DEFAULT_VOL = 7;
 
 
@@ -41,24 +42,30 @@ const byte ISD_SS_PIN = SS;
 
 
 /////////////////////////
-// CONSTANTS
+// ISD1700 CONSTANTS
 /////////////////////////
 
-// SPI
 const SPISettings ISD_SPI_SETTINGS(SPI_RATE, SPI_ENDIAN, SPI_MODE);
-
-// ISD1700
 const uint16_t ISD_MIN_ADDR = 0x010;
-const uint16_t ISD_FT_MASK = (1 << 6);
-const byte ISD_VOL_MASK = B111;
 const byte ISD_MIN_VOL = 7;
+const byte ISD_DISABLE_SPK = 8;
 
-// ISD Commands
+// Configuration Masks
+const byte ISD_VOL_MASK = B111;
+const uint16_t ISD_FT_MASK = (1 << 6);
+const uint16_t ISD_SPK_MASK = (1 << 8);
+
+// Time Delays
+const byte ISD_T_PUD = 50;
+const byte ISD_T_SET = 100;
+
+// Commands
 const byte ISD_PU = 0x01;
 const byte ISD_STOP = 0x02;
+const byte ISD_RESET = 0x03;
 const byte ISD_CLR_INT = 0x04;
 const byte ISD_PD = 0x07;
-const byte ISD_RD_REC_PTR = 0x08;
+const byte ISD_G_ERASE = 0x43;
 const byte ISD_WR_APC2 = 0x65;
 const byte ISD_SET_PLAY = 0x80;
 const byte ISD_SET_REC = 0x81;
@@ -78,29 +85,30 @@ void initISD();
  * Affects the ISD1700 device's APC register
  */
 
-void powerUpISD();
+void eraseISD();
 /*
- * Powers up the ISD1700 device into SPI mode
- *
- * This function should be called before any other commands are sent to the ISD1700 device,
- * excluding initISD().
+ * Performs a global erase on the ISD1700 device
  */
 
-void powerDownISD();
+void configISDAPC(byte volume);
 /*
- * Powers down the ISD1700 device from SPI mode
+ * Configures the ISD1700 device's analogue path
+ * This should be done when switching between playback and idle/recording states
  *
- * This function should be called after all other operations complete.
+ * The volume is based upon the ISD1700 device. That is, a value of 7 is minimum, and 0 is maximum.
+ * Values larger than 7 will disable the speaker and instead enable analogue input.
+ * Therefore, the speaker must be disabled when recording.
+ *
+ * Affects the ISD1700 device's APC register
+ * INPUT:  Speaker volume
  */
 
 void stopISD();
 /*
- * Stops any active operation of the ISD1700 device and resets it
+ * Stops any active operation of the ISD1700 device
  *
- * This function clears the ISD1700 device's interrupt flag, and resets its configuration.
- * This includes enabling audio feedthrough and setting volume.
- *
- * Affects the ISD1700 device's APC register and interrupt flag
+ * If a stop command is sent while the ISD1700 device is currently busy,
+ * the interrupt flag will be set.
  */
 
 void beginISDRecording(uint16_t record_ptr);
@@ -118,7 +126,7 @@ void beginISDRecording(uint16_t record_ptr);
  * INPUT:  Recording start address
  */
 
-void beginISDPlayback(uint16_t play_ptr, byte volume);
+void beginISDPlayback(uint16_t play_ptr);
 /*
  * Begins playback from the ISD1700 at a given address
  *
@@ -128,24 +136,18 @@ void beginISDPlayback(uint16_t play_ptr, byte volume);
  *
  * An invalid playback address will default to playing the entirety of the ISD1700 device's memory.
  *
- * The volume is based upon the ISD1700 device. That is, a value of 7 is minimum, and 0 is maximum.
- * Invalid volume levels will default to minimum volume.
+ * The speaker must be enabled before this function is called.
  *
- * Audio feedthrough is disabled before playback.
- * It should be enabled after playback stops.
- *
- * Affects the ISD1700 device's APC and PLAY_PTR registers
+ * Affects the ISD1700 device's SR0 register
  * INPUT:  Playback start address
- *         Playback volume (7 to 0)
  */
 
-uint16_t getRecPtrISD();
+uint16_t getCurrPtrISD();
 /*
- * Gets the current recording pointer of the ISD1700 device
+ * Gets the current pointer of the ISD1700 device
+ * Also clears interrupts
  *
- * This function can only be called when the device is idle (and powered up).
- *
- * OUTPUT: Recording pointer of the ISD1700 device
+ * OUTPUT: Current address of the ISD1700 device
  */
 
 bool ISDInterrupted();
@@ -158,26 +160,17 @@ bool ISDInterrupted();
  * OUTPUT: Interrupt state
  */
 
+void clearIntISD();
+/*
+ * Clears the interrupt flag of the ISD1700 device
+ *
+ * Affects the ISD1700 device's interrupt flag
+ */
+
 
 /////////////////////////
 // INTERNAL FUNCTIONS
 /////////////////////////
-
-void configISD(bool feedthrough, byte volume);
-/*
- * Configures the ISD1700 device
- *
- * Feedthrough connects the analogue input to the speaker output.
- * It is required to record from the analogue input.
- * It should be enabled by default.
- *
- * The volume is based upon the ISD1700 device. That is, a value of 7 is minimum, and 0 is maximum.
- * Invalid volume levels will default to minimum volume.
- *
- * Affects the ISD1700 device's APC register
- * INPUT:  Feedthrough setting
- *         Playback volume (7 to 0)
- */
 
 void sendISDCommand(byte command);
 /*
@@ -188,13 +181,6 @@ void sendISDCommand(byte command);
  * All SPI actions are handled automatically.
  *
  * INPUT:  Command to execute
- */
-
-void clearIntISD();
-/*
- * Clears the interrupt flag of the ISD1700 device
- *
- * Affects the ISD1700 device's interrupt flag
  */
 
 

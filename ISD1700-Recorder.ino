@@ -3,6 +3,19 @@
 void setup() {
 	initISD();
 	initUART();
+	Serial.write("\r\n");
+	if(confirmISDFlashErase()) {
+		clearIntISD();
+		eraseISD();
+		printFlashString(ERASING_STR);
+		while(!ISDInterrupted()) {
+			// Do Nothing
+		}
+		clearIntISD();
+	}
+	else {
+		printFlashString(ERASE_NOTE_STR);
+	}
 }
 
 void loop() {
@@ -14,7 +27,6 @@ void loop() {
 		// Do nothing
 	}
 	Serial.flush();
-	powerUpISD();
 	clearIntISD();
 	beginISDRecording(Start_Ptr);
 	unsigned long Record_Start = millis();
@@ -27,18 +39,22 @@ void loop() {
 		Curr_Duration = millis() - Record_Start;
 	}
 	stopISD();
+	clearIntISD();
 
 	if(Interrupted) {
-		powerDownISD();
 		printFlashString(ERR_EOM_1_STR);
 		Serial.print(Curr_Duration);
 		printFlashString(ERR_EOM_2_STR);
 	}
 	else {
-		unsigned long Mem_Used = getRecPtrISD() - Start_Ptr;
-		powerDownISD();
+		unsigned long Stop_Ptr = getCurrPtrISD();
+		unsigned long Sample_Rate = ((Stop_Ptr - Start_Ptr) * 1000000) / Curr_Duration;
+
+		printFlashString(RECORDING_END_STR);
+		Serial.print(Stop_Ptr, HEX);
+		Serial.write(".\r\n");
 		printFlashString(SR_ESTIMATE_1_STR);
-		Serial.print(Mem_Used / Curr_Duration);
+		Serial.print(Sample_Rate);
 		printFlashString(SR_ESTIMATE_2_STR);
 
 		bool Playback_State = true;
@@ -48,15 +64,16 @@ void loop() {
 				Playback_State = false;
 			}
 			else {
-				powerUpISD();
-				beginISDPlayback(Start_Ptr, Playback_Volume);
+				configISDAPC(Playback_Volume);
+				beginISDPlayback(Start_Ptr);
 				unsigned long Playback_Start = millis();
 				printFlashString(PLAYBACK_STR);
 				while((millis() - Playback_Start) < Curr_Duration) {
 					// Do nothing
 				}
 				stopISD();
-				powerDownISD();
+				clearIntISD();
+				configISDAPC(ISD_DISABLE_SPK);
 			}
 		}
 	}

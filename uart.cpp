@@ -5,6 +5,45 @@ void initUART() {
 	return;
 }
 
+bool confirmISDFlashErase() {
+	bool Read_Complete = false;
+	bool Input_Digit = false;
+	bool Erase = false;
+
+	flushSerialReadBuffer();
+	printFlashString(ERASE_PROMPT_STR);
+	Serial.flush();
+	while(!Read_Complete) {
+		while(!Serial.available()){
+			// Do nothing
+		}
+		char Read_Digit = Serial.read();
+		if(Read_Digit == '\r' || Read_Digit == '\n') {
+			Serial.write("\r\n");
+			Read_Complete = true;
+		}
+		else if(Input_Digit) {
+			if((Read_Digit == '\b') || (Read_Digit == 127)) {
+				Serial.write(127);
+				Erase = false;
+				Input_Digit = false;
+			}
+		}
+		else {
+			if((Read_Digit == 'y') || (Read_Digit == 'Y')) {
+				Serial.write('Y');
+				Erase = true;
+				Input_Digit = true;
+			}
+			else if((Read_Digit == 'n') || (Read_Digit == 'N')) {
+				Serial.write('N');
+				Input_Digit = true;
+			}
+		}
+	}
+	return Erase;
+}
+
 uint16_t getStartAddress() {
 	bool Valid_Addr = false;
 	uint16_t Start_Addr;
@@ -62,7 +101,7 @@ unsigned long getRecordDuration() {
 byte getPlaybackVolume() {
 	bool Read_Complete = false;
 	bool Input_Digit = false;
-	byte Volume = 0;
+	byte Volume = ISD_DISABLE_SPK;
 
 	flushSerialReadBuffer();
 	printFlashString(VOL_STR);
@@ -75,7 +114,7 @@ byte getPlaybackVolume() {
 		if(Input_Digit) {
 			if((Read_Digit == '\b') || (Read_Digit == 127)) {
 				Serial.write(127);
-				Volume = 0;
+				Volume = ISD_DISABLE_SPK;
 				Input_Digit = false;
 			}
 		}
