@@ -25,7 +25,7 @@ const unsigned int AUDIO_THRESHOLD = 517;  // Lower is more sensitive
 
 // UI Strings
 const PROGMEM char ERASE_PROMPT_STR[] = "Reset (erase) all memory for writing? (Y/N) ";
-const PROGMEM char ERASE_NOTE_STR[] = "Note that some memory locations may not be writable.\r\n";
+const PROGMEM char ERASE_NOTE_STR[] = "Note that some memory locations may not be record correctly.\r\n";
 const PROGMEM char ERASING_STR[] = "Erasing all memory...\r\n";
 const PROGMEM char START_ADDR_STR[] = "Start address: 0x";
 const PROGMEM char DURATION_STR[] = "Duration of audio (in milliseconds): ";
@@ -39,7 +39,6 @@ const PROGMEM char PLAYBACK_STR[] = "Playing back audio...\r\n";
 
 // Error Strings
 const PROGMEM char ERR_INV_ADDR_STR[] = "Invalid memory pointer!\r\n";
-const PROGMEM char ERR_INV_DUR_STR[] = "Invalid duration!\r\n";
 const PROGMEM char ERR_EOM_1_STR[] = "End of memory reached. Audio was still recorded for ";
 const PROGMEM char ERR_EOM_2_STR[] = " milliseconds.\r\n";
 

@@ -15,13 +15,13 @@ void initISD() {
 	return;
 }
 
-void eraseISD() {
-	sendISDCommand(ISD_G_ERASE);
-	return;
+uint16_t eraseISD() {
+	return sendISDCommand(ISD_G_ERASE);
 }
 
-void configISDAPC(byte volume) {
+uint16_t configISDAPC(byte volume) {
 	uint16_t ISD_APC_Config = ISD_APC_DEFAULT_CONFIG;
+	uint16_t Status_Register;
 
 	if(volume > ISD_MIN_VOL) {
 		ISD_APC_Config |= ISD_SPK_MASK;
@@ -35,74 +35,69 @@ void configISDAPC(byte volume) {
 	SPI.beginTransaction(ISD_SPI_SETTINGS);
 	digitalWrite(ISD_SS_PIN, LOW);
 	SPI.transfer(ISD_WR_APC2);
-	SPI.transfer16(ISD_APC_Config);
+	Status_Register = SPI.transfer16(ISD_APC_Config);  // Bytes reversed
 	digitalWrite(ISD_SS_PIN, HIGH);
 	SPI.endTransaction();
 
-	return;
+	uint16_t Lower_Byte = Status_Register & 0xFF;
+	return ((Status_Register >> 8) | (Lower_Byte << 8));
 }
 
-void stopISD() {
-	sendISDCommand(ISD_STOP);
-	return;
+uint16_t stopISD() {
+	return sendISDCommand(ISD_STOP);
 }
 
-void beginISDRecording(uint16_t record_ptr) {
+uint16_t beginISDRecording(uint16_t record_ptr) {
+	uint16_t Status_Register;
+
 	SPI.beginTransaction(ISD_SPI_SETTINGS);
 	digitalWrite(ISD_SS_PIN, LOW);
-	SPI.transfer16((uint16_t) ISD_SET_REC);
+	Status_Register = SPI.transfer16((uint16_t) ISD_SET_REC);
 	SPI.transfer16(record_ptr);
 	SPI.transfer16(ISD_MAX_ADDR);
 	SPI.transfer(0x00);
 	digitalWrite(ISD_SS_PIN, HIGH);
 	SPI.endTransaction();
-	return;
+	return Status_Register;
 }
 
-void beginISDPlayback(uint16_t play_ptr) {
+uint16_t beginISDPlayback(uint16_t play_ptr) {
+	uint16_t Status_Register;
 	if((play_ptr < ISD_MIN_ADDR) || (play_ptr > ISD_MAX_ADDR)) {
 		play_ptr = ISD_MIN_ADDR;
 	}
 
 	SPI.beginTransaction(ISD_SPI_SETTINGS);
 	digitalWrite(ISD_SS_PIN, LOW);
-	SPI.transfer16((uint16_t) ISD_SET_PLAY);
+	Status_Register = SPI.transfer16((uint16_t) ISD_SET_PLAY);
 	SPI.transfer16(play_ptr);
 	SPI.transfer16(ISD_MAX_ADDR);
 	SPI.transfer(0x00);
 	digitalWrite(ISD_SS_PIN, HIGH);
 	SPI.endTransaction();
 
-	return;
-}
-
-uint16_t getCurrPtrISD() {
-	uint16_t Record_Ptr;
-
-	SPI.beginTransaction(ISD_SPI_SETTINGS);
-	digitalWrite(ISD_SS_PIN, LOW);
-	Record_Ptr = SPI.transfer16((uint16_t) ISD_CLR_INT);
-	digitalWrite(ISD_SS_PIN, HIGH);
-	SPI.endTransaction();
-
-	Record_Ptr = (Record_Ptr >> 5);
-	return Record_Ptr;
+	return Status_Register;
 }
 
 bool ISDInterrupted() {
 	return(!digitalRead(ISD_INT_PIN));
 }
 
-void clearIntISD() {
-	sendISDCommand(ISD_CLR_INT);
-	return;
+uint16_t clearIntISD() {
+	return sendISDCommand(ISD_CLR_INT);
 }
 
-void sendISDCommand(byte command) {
+uint16_t getCurrPtrISD(uint16_t sr0_register) {
+	return (sr0_register >> 5);
+}
+
+uint16_t sendISDCommand(byte command) {
+	uint16_t Status_Register;
+
 	SPI.beginTransaction(ISD_SPI_SETTINGS);
 	digitalWrite(ISD_SS_PIN, LOW);
-	SPI.transfer16((uint16_t) command);
+	Status_Register = SPI.transfer16((uint16_t) command);
 	digitalWrite(ISD_SS_PIN, HIGH);
 	SPI.endTransaction();
-	return;
+	return Status_Register;
 }

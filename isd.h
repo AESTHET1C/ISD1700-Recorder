@@ -10,6 +10,9 @@
  * If a volume is selected for playback, the speaker is enabled and the analogue input disabled.
  * Similarly, if the speaker is disabled, the analogue input becomes enabled for recording.
  *
+ * The majority of commands return the ISD1700 device's SR0 register as it was set at call time.
+ * If the SR0 register is changed by the command, the updated value is not reflected.
+ *
  * Written by Alex Tavares <tavaresa13@gmail.com>
  */
 
@@ -80,17 +83,20 @@ void initISD();
  * Initializes SPI communications and the ISD1700 device
  * Must be called before communicating with the ISD1700 device
  *
- * This involves setting pin states and resetting the ISD1700 device's configuration.
+ * This involves setting pin states and configuring the SPI device.
+ * In addition, the ISD1700 device is reset, set to SPI mode, and its speaker is disabled.
  *
  * Affects the ISD1700 device's APC register
  */
 
-void eraseISD();
+uint16_t eraseISD();
 /*
  * Performs a global erase on the ISD1700 device
+ *
+ * OUTPUT: SR0 register
  */
 
-void configISDAPC(byte volume);
+uint16_t configISDAPC(byte volume);
 /*
  * Configures the ISD1700 device's analogue path
  * This should be done when switching between playback and idle/recording states
@@ -101,32 +107,37 @@ void configISDAPC(byte volume);
  *
  * Affects the ISD1700 device's APC register
  * INPUT:  Speaker volume
+ * OUTPUT: SR0 register
  */
 
-void stopISD();
+uint16_t stopISD();
 /*
  * Stops any active operation of the ISD1700 device
  *
  * If a stop command is sent while the ISD1700 device is currently busy,
- * the interrupt flag will be set.
+ * the interrupt flag is set.
+ *
+ * Affects the ISD1700 device's interrupt flag
+ * OUTPUT: SR0 register
  */
 
-void beginISDRecording(uint16_t record_ptr);
+uint16_t beginISDRecording(uint16_t record_ptr);
 /*
  * Begins recording indefinitely to the ISD1700 at a given address
  *
  * Recording should be stopped by using stopISD().
  * If end of memory is reached, recording stops and the ISD1700's interrupt register is set.
  *
- * It is assumed the APC register is already configured.
- *
  * An invalid recording address will cause undefined behavior.
+ *
+ * The analogue input must be enabled before this function is called.
  *
  * Affects the ISD1700 device's REC_PTR register
  * INPUT:  Recording start address
+ * OUTPUT: SR0 register
  */
 
-void beginISDPlayback(uint16_t play_ptr);
+uint16_t beginISDPlayback(uint16_t play_ptr);
 /*
  * Begins playback from the ISD1700 at a given address
  *
@@ -140,14 +151,7 @@ void beginISDPlayback(uint16_t play_ptr);
  *
  * Affects the ISD1700 device's SR0 register
  * INPUT:  Playback start address
- */
-
-uint16_t getCurrPtrISD();
-/*
- * Gets the current pointer of the ISD1700 device
- * Also clears interrupts
- *
- * OUTPUT: Current address of the ISD1700 device
+ * OUTPUT: SR0 register
  */
 
 bool ISDInterrupted();
@@ -160,11 +164,19 @@ bool ISDInterrupted();
  * OUTPUT: Interrupt state
  */
 
-void clearIntISD();
+uint16_t clearIntISD();
 /*
  * Clears the interrupt flag of the ISD1700 device
  *
  * Affects the ISD1700 device's interrupt flag
+ * OUTPUT: SR0 register
+ */
+
+uint16_t getCurrPtrISD(uint16_t sr0_register);
+/*
+ * Gets the current pointer of the ISD1700 device given the sr0 register
+ *
+ * OUTPUT: Current address of the ISD1700 device
  */
 
 
@@ -172,7 +184,7 @@ void clearIntISD();
 // INTERNAL FUNCTIONS
 /////////////////////////
 
-void sendISDCommand(byte command);
+uint16_t sendISDCommand(byte command);
 /*
  * Sends a basic command to the ISD1700 device
  *
@@ -181,6 +193,7 @@ void sendISDCommand(byte command);
  * All SPI actions are handled automatically.
  *
  * INPUT:  Command to execute
+ * OUTPUT: SR0 register
  */
 
 

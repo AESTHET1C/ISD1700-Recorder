@@ -23,11 +23,11 @@ bool confirmISDFlashErase() {
 			Read_Complete = true;
 		}
 		else if(Input_Digit) {
-			if((Read_Digit == '\b') || (Read_Digit == 127)) {
-				Serial.write(127);
-				Erase = false;
-				Input_Digit = false;
-			}
+				if((Read_Digit == '\b') || (Read_Digit == 127)) {
+					Serial.write(127);
+					Erase = false;
+					Input_Digit = false;
+				}
 		}
 		else {
 			if((Read_Digit == 'y') || (Read_Digit == 'Y')) {
@@ -74,24 +74,20 @@ unsigned long getRecordDuration() {
 			// Do nothing
 		}
 		char Read_Digit = Serial.read();
-
-		if(Input_Digits > 0) {
+		if((Input_Digits < ISD_DUR_MAX_DIGITS) && (Read_Digit >= '0') && (Read_Digit <= '9')) {
+			Serial.write(Read_Digit);
+			Rec_Duration = (Rec_Duration * 10) + (Read_Digit - '0');
+			Input_Digits++;
+		}
+		else if(Input_Digits > 0) {
 			if((Read_Digit == '\b') || (Read_Digit == 127)) {
 				Serial.write(127);
 				Rec_Duration = (Rec_Duration / 10);
 				Input_Digits--;
 			}
-			if(Read_Digit == '\r' || Read_Digit == '\n') {
+			else if(Read_Digit == '\r' || Read_Digit == '\n') {
 				Serial.write("\r\n");
 				Read_Complete = true;
-			}
-		}
-
-		if(Input_Digits < ISD_DUR_MAX_DIGITS) {
-			if(Read_Digit >= '0' && Read_Digit <= '9') {
-				Rec_Duration = (Rec_Duration * 10) + (Read_Digit - '0');
-				Serial.write(Read_Digit);
-				Input_Digits++;
 			}
 		}
 	}
@@ -111,23 +107,21 @@ byte getPlaybackVolume() {
 			// Do nothing
 		}
 		char Read_Digit = Serial.read();
-		if(Input_Digit) {
+		if(Read_Digit == '\r' || Read_Digit == '\n') {
+			Serial.write("\r\n");
+			Read_Complete = true;
+		}
+		else if(Input_Digit) {
 			if((Read_Digit == '\b') || (Read_Digit == 127)) {
 				Serial.write(127);
 				Volume = ISD_DISABLE_SPK;
 				Input_Digit = false;
 			}
 		}
-		else {
-			if(Read_Digit >= '0' && Read_Digit <= '9') {
-				Serial.write(Read_Digit);
-				Volume = (Read_Digit - '0');
-				Input_Digit = true;
-			}
-		}
-		if(Read_Digit == '\r' || Read_Digit == '\n') {
-			Serial.write("\r\n");
-			Read_Complete = true;
+		else if(Read_Digit >= '0' && Read_Digit <= '9') {
+			Serial.write(Read_Digit);
+			Volume = (Read_Digit - '0');
+			Input_Digit = true;
 		}
 	}
 	return Volume;
@@ -170,7 +164,7 @@ uint16_t promptStartAddress() {
 				Start_Addr = (Start_Addr >> 4);
 				Input_Digits--;
 			}
-			if(Read_Digit == '\r' || Read_Digit == '\n') {
+			else if(Read_Digit == '\r' || Read_Digit == '\n') {
 				Serial.write("\r\n");
 				Read_Complete = true;
 			}
@@ -178,13 +172,13 @@ uint16_t promptStartAddress() {
 
 		if(Input_Digits < ISD_HEX_ADDR_WIDTH) {
 			if(Read_Digit >= '0' && Read_Digit <= '9') {
-				Start_Addr = (Start_Addr << 4) + (Read_Digit - '0');
 				Serial.write(Read_Digit);
+				Start_Addr = (Start_Addr << 4) + (Read_Digit - '0');
 				Input_Digits++;
 			}
-			if(Read_Digit >= 'A' && Read_Digit <= 'F') {
-				Start_Addr = (Start_Addr << 4) + (Read_Digit - 'A' + 10);
+			else if(Read_Digit >= 'A' && Read_Digit <= 'F') {
 				Serial.write(Read_Digit);
+				Start_Addr = (Start_Addr << 4) + (Read_Digit - 'A' + 10);
 				Input_Digits++;
 			}
 		}

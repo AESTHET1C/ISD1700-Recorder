@@ -38,7 +38,7 @@ void loop() {
 		Interrupted = ISDInterrupted();
 		Curr_Duration = millis() - Record_Start;
 	}
-	stopISD();
+	uint16_t Status_Register = stopISD();
 	clearIntISD();
 
 	if(Interrupted) {
@@ -47,7 +47,7 @@ void loop() {
 		printFlashString(ERR_EOM_2_STR);
 	}
 	else {
-		unsigned long Stop_Ptr = getCurrPtrISD();
+		unsigned long Stop_Ptr = getCurrPtrISD(Status_Register);
 		unsigned long Sample_Rate = ((Stop_Ptr - Start_Ptr) * 1000000) / Curr_Duration;
 
 		printFlashString(RECORDING_END_STR);
