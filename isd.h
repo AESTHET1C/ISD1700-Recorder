@@ -31,7 +31,7 @@ const byte SPI_ENDIAN = LSBFIRST;
 const byte SPI_MODE = SPI_MODE3;
 
 // ISD1700
-const uint16_t ISD_MAX_ADDR = 0x14F;                                   // ISD1740
+const uint16_t ISD_MAX_ADDR = 0x14F;                               // ISD1740
 const uint16_t ISD_APC_DEFAULT_CONFIG = (B0110 << 8) + B10100000;
 const byte ISD_DEFAULT_VOL = 7;
 
